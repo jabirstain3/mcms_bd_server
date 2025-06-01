@@ -128,7 +128,25 @@ async function run() {
             res.send( result );
         })
 
+        // Update a product (organaizer only)
+        app.put('/camp/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const product = req.body;
+            // console.log( product );
+            const filter = { _id: new ObjectId( id ) };
+            const options = { upsert: true };
+            const updateDoc = { $set: product, };
+            const result = await productCollection.updateOne( filter, updateDoc, options );
+            res.send( result );
+        })
 
+        // Delete a product (organaizer only)
+        app.delete('/camp/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId( id ) };
+            const result = await productCollection.deleteOne( filter );
+            res.send( result );
+        })
 
 
         // Send a ping to confirm a successful connection
