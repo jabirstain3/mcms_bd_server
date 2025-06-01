@@ -26,9 +26,9 @@ async function run() {
 
         const database = client.db( 'mcmsbd' );
         const userCollection = database.collection( 'users' );
-        // const productCollection = database.collection( 'products' );
+        const productCollection = database.collection( 'products' );
 
-        // Get all users
+        // Get all users (organaizer only)
         app.get('/users', async ( req, res ) =>{
             const users = userCollection.find();
             const result = await users.toArray();
@@ -44,10 +44,18 @@ async function run() {
             res.send( result );
         })
 
-        // Get a single user by ID
+        // Get a single user by email
         app.get('/user/:email', async ( req, res ) =>{
             const email = req.params.email;
             const result = await userCollection.findOne({ email: email });
+            // console.log(result);
+            res.send( result )
+        })
+
+        // Get a single user by id (organaizer only)
+        app.get('/user/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const result = await userCollection.findOne({ _id: new ObjectId( id ) });
             // console.log(result);
             res.send( result )
         })
@@ -75,6 +83,32 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: new ObjectId( id ) };
             const result = await userCollection.deleteOne( filter );
+            res.send( result );
+        })
+
+
+
+        // create a new product (organaizer only) 
+        app.post('/camp', async ( req, res ) => {
+            const product = req.body;
+            // console.log( product );
+            const result = await productCollection.insertOne( product );
+            res.send( result );
+        })
+
+        // Get all products
+        app.get('/camps', async ( req, res ) => {
+            const products = productCollection.find();
+            const result = await products.toArray();
+            // console.log(result);
+            res.send( result );
+        })
+            
+        // Get a single product by id
+        app.get('/camp/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const result = await productCollection.findOne({ _id: new ObjectId( id ) });
+            // console.log(result);
             res.send( result );
         })
 
