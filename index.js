@@ -112,6 +112,24 @@ async function run() {
             res.send( result );
         })
 
+        // top products by participants
+        app.get('/camps/popular', async ( req, res ) => {
+            const products = productCollection.find().sort({ participants: -1 }).limit(6);
+            const result = await products.toArray();
+            // console.log(result);
+            res.send( result );
+        })
+
+        // upcomming products
+        app.get('/camps/upcomming', async ( req, res ) => {
+            const products = productCollection.find().sort({ date: 1 }).limit();
+            const result = await products.toArray();
+            // console.log(result);
+            res.send( result );
+        })
+
+
+
 
         // Send a ping to confirm a successful connection
         // await client.db( "admin" ).command({ ping: 1 });
