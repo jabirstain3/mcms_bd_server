@@ -25,14 +25,59 @@ async function run() {
         // await client.connect();
 
         const database = client.db( 'mcmsbd' );
-        const productCollection = database.collection( 'users' );
+        const userCollection = database.collection( 'users' );
+        // const productCollection = database.collection( 'products' );
 
+        // Get all users
         app.get('/users', async ( req, res ) =>{
-            const products = productCollection.find().limit(6);
-            const result = await products.toArray();
+            const users = userCollection.find();
+            const result = await users.toArray();
             // console.log(result);
             res.send( result )
         })
+
+        // create a new user
+        app.post('/user', async ( req, res ) => {
+            const user = req.body;
+            // console.log( user );
+            const result = await userCollection.insertOne( user );
+            res.send( result );
+        })
+
+        // Get a single user by ID
+        app.get('/user/:email', async ( req, res ) =>{
+            const email = req.params.email;
+            const result = await userCollection.findOne({ email: email });
+            // console.log(result);
+            res.send( result )
+        })
+
+        // Update a user
+        app.put('/user/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const user = req.body;
+            // console.log( user );
+            const filter = { _id: new ObjectId( id ) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                },
+            };
+            const result = await userCollection.updateOne( filter, updateDoc, options );
+            res.send( result );
+        })
+
+        // Delete a user
+        app.delete('/user/:id', async ( req, res ) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId( id ) };
+            const result = await userCollection.deleteOne( filter );
+            res.send( result );
+        })
+
 
         // Send a ping to confirm a successful connection
         // await client.db( "admin" ).command({ ping: 1 });
