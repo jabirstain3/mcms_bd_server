@@ -25,11 +25,11 @@ async function run() {
         // await client.connect();
 
         const database = client.db( 'mcmsbd' );
-        const userCollection = database.collection( 'users' );
-        const productCollection = database.collection( 'products' );
+        const userCollection = database.collection( 'user' );
+        const productCollection = database.collection( 'camp' );
 
         // Get all users (organaizer only)
-        app.get('/users', async ( req, res ) =>{
+        app.get('/api/users', async ( req, res ) =>{
             const users = userCollection.find();
             const result = await users.toArray();
             // console.log(result);
@@ -37,7 +37,7 @@ async function run() {
         })
 
         // create a new user
-        app.post('/user', async ( req, res ) => {
+        app.post('/api/user', async ( req, res ) => {
             const user = req.body;
             // console.log( user );
             const result = await userCollection.insertOne( user );
@@ -45,7 +45,7 @@ async function run() {
         })
 
         // Get a single user by email
-        app.get('/user/:email', async ( req, res ) =>{
+        app.get('/api/user/:email', async ( req, res ) =>{
             const email = req.params.email;
             const result = await userCollection.findOne({ email: email });
             // console.log(result);
@@ -53,7 +53,7 @@ async function run() {
         })
 
         // Get a single user by id (organaizer only)
-        app.get('/user/:id', async ( req, res ) => {
+        app.get('/api/user/:id', async ( req, res ) => {
             const id = req.params.id;
             const result = await userCollection.findOne({ _id: new ObjectId( id ) });
             // console.log(result);
@@ -61,7 +61,7 @@ async function run() {
         })
 
         // Update a user
-        app.put('/user/:id', async ( req, res ) => {
+        app.put('/api/user/:id', async ( req, res ) => {
             const id = req.params.id;
             const user = req.body;
             // console.log( user );
@@ -79,7 +79,7 @@ async function run() {
         })
 
         // Delete a user
-        app.delete('/user/:id', async ( req, res ) => {
+        app.delete('/api/user/:id', async ( req, res ) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId( id ) };
             const result = await userCollection.deleteOne( filter );
@@ -89,7 +89,7 @@ async function run() {
 
 
         // create a new product (organaizer only) 
-        app.post('/camp', async ( req, res ) => {
+        app.post('/api/camp', async ( req, res ) => {
             const product = req.body;
             // console.log( product );
             const result = await productCollection.insertOne( product );
@@ -97,7 +97,7 @@ async function run() {
         })
 
         // Get all products
-        app.get('/camps', async ( req, res ) => {
+        app.get('/api/camps', async ( req, res ) => {
             const products = productCollection.find();
             const result = await products.toArray();
             // console.log(result);
@@ -105,7 +105,7 @@ async function run() {
         })
             
         // Get a single product by id
-        app.get('/camp/:id', async ( req, res ) => {
+        app.get('/api/camp/:id', async ( req, res ) => {
             const id = req.params.id;
             const result = await productCollection.findOne({ _id: new ObjectId( id ) });
             // console.log(result);
@@ -113,15 +113,32 @@ async function run() {
         })
 
         // top products by participants
-        app.get('/camps/popular', async ( req, res ) => {
-            const products = productCollection.find().sort({ participants: -1 }).limit(6);
+        app.get('/api/camps/popular', async ( req, res ) => {
+            const now = new Date();
+            const pipeline = [
+                {
+                    $addFields: {     //date might not be date type
+                        registrationStart: { $toDate: "$campaignRegistration.start" },
+                        registrationEnd: { $toDate: "$campaignRegistration.end" }
+                    }
+                },
+                {
+                    $match: {
+                        registrationStart: { $lte: now },
+                        registrationEnd: { $gte: now }
+                    }
+                },
+                { $sort: { CampaignParticipants: -1 }},
+                { $limit: 6 }
+            ];
+            const products = productCollection.aggregate( pipeline );
             const result = await products.toArray();
             // console.log(result);
             res.send( result );
         })
 
         // upcomming products
-        app.get('/camps/upcomming', async ( req, res ) => {
+        app.get('/api/camps/upcomming', async ( req, res ) => {
             const products = productCollection.find().sort({ date: 1 }).limit();
             const result = await products.toArray();
             // console.log(result);
@@ -129,7 +146,7 @@ async function run() {
         })
 
         // Update a product (organaizer only)
-        app.put('/camp/:id', async ( req, res ) => {
+        app.put('/api/camp/:id', async ( req, res ) => {
             const id = req.params.id;
             const product = req.body;
             // console.log( product );
@@ -141,7 +158,7 @@ async function run() {
         })
 
         // Delete a product (organaizer only)
-        app.delete('/camp/:id', async ( req, res ) => {
+        app.delete('/api/camp/:id', async ( req, res ) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId( id ) };
             const result = await productCollection.deleteOne( filter );
